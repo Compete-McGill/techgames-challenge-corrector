@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	repos := []string{"https://github.com/rwieruch/node-express-server.git", "https://github.com/MohamedBeydoun/ode-express-server.git"}
+	repos := []string{"https://github.com/rwieruch/node-express-server.git", "https://github.com/MohamedBeydoun/node-express-server.git"}
 
 	users := corrector.Setup(repos)
 	userServers := corrector.Run(users)
