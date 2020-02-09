@@ -63,23 +63,25 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 }
 
 // Kill terminates all the user servers
-func Kill(users []*UserServer) error {
+func Kill(users []*UserServer) {
 	// TODO: Upgrade to goroutine
 	for _, user := range users {
 		pgid, err := syscall.Getpgid(user.server.Process.Pid)
 		if err != nil {
-			return err
+			log.Fatal(err)
 		}
 
 		if err := syscall.Kill(-pgid, 9); err != nil {
-			return err
+			log.Fatal(err)
 		}
 	}
-
-	return nil
 }
 
 func getFreePort() (int, error) {
+	mutex := sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
 		return 0, err

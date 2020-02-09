@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	corrector "github.com/Compete-McGill/techgames-challenge-corrector/pkg"
 )
 
@@ -11,13 +9,7 @@ func main() {
 
 	users := corrector.Setup(repos)
 	userServers := corrector.Run(users)
-
-	if err := corrector.Grade(userServers); err != nil {
-		log.Fatal(err)
-	}
-	if err := corrector.Kill(userServers); err != nil {
-		log.Fatal(err)
-	}
-
+	corrector.Grade(userServers)
+	corrector.Kill(userServers)
 	corrector.Clean(users)
 }
