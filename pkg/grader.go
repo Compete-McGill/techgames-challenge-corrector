@@ -1,6 +1,7 @@
 package corrector
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -30,6 +31,26 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	scores := make(map[string]bool)
 
 	scores["liveness"] = livenessTest(userServer)
+	scores["createAccount201"] = createAccount201Test(userServer)
+	scores["createAccount400"] = createAccount400Test(userServer)
+	scores["createAccount500"] = createAccount500Test(userServer)
+	scores["authenticate200"] = authenticate200Test(userServer)
+	scores["authenticate403"] = authenticate403Test(userServer)
+	scores["indexArticlesTest"] = indexArticlesTest(userServer)
+	scores["showArticles200Test"] = showArticles200Test(userServer)
+	scores["showArticles404Test"] = showArticles404Test(userServer)
+	scores["createArticles201Test"] = createArticles200Test(userServer)
+	scores["createArticles400Test"] = createArticles400Test(userServer)
+	scores["createArticles403Test"] = createArticles403Test(userServer)
+	scores["updateArticles200Test"] = updateArticles200Test(userServer)
+	scores["updateArticles400Test"] = updateArticles400Test(userServer)
+	scores["updateArticles401Test"] = updateArticles401Test(userServer)
+	scores["updateArticles403Test"] = updateArticles403Test(userServer)
+	scores["updateArticles404Test"] = updateArticles404Test(userServer)
+	scores["deleteArticles200Test"] = deleteArticles200Test(userServer)
+	scores["deleteArticles401Test"] = deleteArticles401Test(userServer)
+	scores["deleteArticles403Test"] = deleteArticles403Test(userServer)
+	scores["deleteArticles404Test"] = deleteArticles404Test(userServer)
 
 	for test, score := range scores {
 		status := ""
@@ -68,4 +89,172 @@ func livenessTest(userServer *UserServer) bool {
 	}
 
 	return score
+}
+
+func createAccount201Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/auth/createAccount 201")
+
+	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
+		Email:    "example@email.com",
+		Password: "password",
+		FullName: "full name",
+	})
+
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.Status == "201"
+}
+
+func createAccount400Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/auth/createAccount 400")
+
+	userInfo, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
+		Password: "password",
+		FullName: "full name",
+	})
+
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.Status == "400"
+}
+
+func createAccount500Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/auth/createAccount 500")
+
+	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
+		Email:    "example@email.com",
+		Password: "new password",
+		FullName: "new full name",
+	})
+
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.Status == "500"
+}
+
+func authenticate200Test(userServer *UserServer) bool {
+	// TODO: Add token validation with predetermined secret
+	log.Println("Testing POST /api/auth/authenticate 200")
+
+	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
+		Email:    "example@email.com",
+		Password: "password",
+	})
+
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/authenticate", "application/json", bytes.NewBuffer(userInfo))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.Status == "200"
+}
+
+func authenticate403Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/auth/authenticate 403")
+
+	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
+		Email:    "example@email.com",
+		Password: "not password",
+	})
+
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/authenticate", "application/json", bytes.NewBuffer(userInfo))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.Status == "403"
+}
+
+func indexArticlesTest(userServer *UserServer) bool {
+	log.Println("Testing GET /api/articles 200")
+	return false
+}
+
+func showArticles200Test(userServer *UserServer) bool {
+	log.Println("Testing GET /api/articles/{articleId} 200")
+	return false
+}
+
+func showArticles404Test(userServer *UserServer) bool {
+	log.Println("Testing GET /api/articles/{articleId} 404")
+	return false
+}
+
+func createArticles200Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/articles 200")
+	return false
+}
+
+func createArticles400Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/articles 400")
+	return false
+}
+
+func createArticles403Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/articles 403")
+	return false
+}
+
+func updateArticles200Test(userServer *UserServer) bool {
+	log.Println("Testing PUT /api/articles/{atricleId} 200")
+	return false
+}
+
+func updateArticles400Test(userServer *UserServer) bool {
+	log.Println("Testing PUT /api/articles/{atricleId} 400")
+	return false
+}
+
+func updateArticles401Test(userServer *UserServer) bool {
+	log.Println("Testing PUT /api/articles/{atricleId} 401")
+	return false
+}
+
+func updateArticles403Test(userServer *UserServer) bool {
+	log.Println("Testing PUT /api/articles/{atricleId} 403")
+	return false
+}
+
+func updateArticles404Test(userServer *UserServer) bool {
+	log.Println("Testing PUT /api/articles/{atricleId} 404")
+	return false
+}
+
+func deleteArticles200Test(userServer *UserServer) bool {
+	log.Println("Testing DELETE /api/articles/{atricleId} 200")
+	return false
+}
+
+func deleteArticles401Test(userServer *UserServer) bool {
+	log.Println("Testing DELETE /api/articles/{atricleId} 401")
+	return false
+}
+
+func deleteArticles403Test(userServer *UserServer) bool {
+	log.Println("Testing DELETE /api/articles/{atricleId} 403")
+	return false
+}
+
+func deleteArticles404Test(userServer *UserServer) bool {
+	log.Println("Testing DELETE /api/articles/{atricleId} 404")
+	return false
 }
