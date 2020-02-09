@@ -40,7 +40,8 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 
 	port, err := getFreePort()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %v", err)
+		return
 	}
 
 	os.Setenv("PORT", strconv.Itoa(port))
@@ -55,9 +56,9 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 
 	*userServers = append(*userServers, userServer)
 
-	// TODO: Add error handling
 	if err := server.Start(); err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %v", err)
+		return
 	}
 
 	log.Printf("Waiting for %v's server to start on port %v\n", user, userServer.port)
@@ -70,11 +71,13 @@ func Kill(users []*UserServer) {
 	for _, user := range users {
 		pgid, err := syscall.Getpgid(user.server.Process.Pid)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Error: %v", err)
+			return
 		}
 
 		if err := syscall.Kill(-pgid, 9); err != nil {
-			log.Fatal(err)
+			log.Printf("Error: %v", err)
+			return
 		}
 	}
 }

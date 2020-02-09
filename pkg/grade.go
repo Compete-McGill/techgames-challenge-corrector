@@ -23,14 +23,16 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	log.Println("Testing endpoint /")
-	resp, err := http.Get("http://localhost:" + userServer.port)
+	resp, err := http.Get("http://localhost1:" + userServer.port)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %v", err)
+		return
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %v", err)
+		return
 	}
 	resp.Body.Close()
 
