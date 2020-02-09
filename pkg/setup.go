@@ -28,6 +28,7 @@ func setupHelper(repo string, users *[]string, wg *sync.WaitGroup) {
 	user := strings.Split(repo, "/")[3]
 	*users = append(*users, user)
 
+	// TODO: Add error handling
 	log.Printf("Cloning %v\n", repo)
 	exec.Command("git", "clone", repo, os.Getenv("HOME")+"/test-repos/"+user).Run()
 	log.Printf("Installing dependencies for %v's server\n", user)

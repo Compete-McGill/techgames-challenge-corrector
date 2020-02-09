@@ -53,6 +53,7 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 
 	*userServers = append(*userServers, userServer)
 
+	// TODO: Add error handling
 	if err := server.Start(); err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +65,6 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 
 // Kill terminates all the user servers
 func Kill(users []*UserServer) {
-	// TODO: Upgrade to goroutine
 	for _, user := range users {
 		pgid, err := syscall.Getpgid(user.server.Process.Pid)
 		if err != nil {
