@@ -1,28 +1,29 @@
 package corrector
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
-	"strconv"
 )
 
 // Grade grades the user's server based on a series of tests
-func Grade(userServers []*UserServer) {
+func Grade(userServers []*UserServer) error {
 	// TODO: Upgrade to goroutine
 	for _, userServer := range userServers {
-		fmt.Println("Testing endpoint /ingredients")
-		resp, err := http.Get("http://localhost:" + strconv.Itoa(userServer.port) + "/ingredients")
+		log.Println("Testing endpoint /")
+		resp, err := http.Get("http://localhost:" + userServer.port)
 		if err != nil {
-			fmt.Print(err)
+			return err
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Print(err)
+			return err
 		}
 		resp.Body.Close()
 
-		fmt.Printf("Response: %+v\n", string(body))
+		log.Printf("Response: %+v\n", string(body))
 	}
+
+	return nil
 }
