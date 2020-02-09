@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -18,38 +19,47 @@ type UserServer struct {
 }
 
 // Run runs the user servers
-func Run(users []string) ([]*UserServer, error) {
+func Run(users []string) []*UserServer {
 	userServers := make([]*UserServer, 0, len(users))
+	var wg sync.WaitGroup
 
-	// TODO: Upgrade to goroutine
 	for _, user := range users {
-		port, err := getFreePort()
-		if err != nil {
-			return nil, err
-		}
-
-		os.Setenv("PORT", strconv.Itoa(port))
-		server := exec.Command("npm", "start", "--prefix", os.Getenv("HOME")+"/test-repos/"+user)
-		server.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-
-		userServer := &UserServer{
-			port:   strconv.Itoa(port),
-			server: server,
-			name:   user,
-		}
-
-		userServers = append(userServers, userServer)
-
-		if err := server.Start(); err != nil {
-			return nil, err
-		}
-
-		log.Printf("Waiting for %v's server to start on port %v\n", user, userServer.port)
-		sleepTime, _ := time.ParseDuration("2s")
-		time.Sleep(sleepTime)
+		wg.Add(1)
+		go runHelper(user, &userServers, &wg)
 	}
 
-	return userServers, nil
+	wg.Wait()
+
+	return userServers
+}
+
+func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	port, err := getFreePort()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Setenv("PORT", strconv.Itoa(port))
+	server := exec.Command("npm", "start", "--prefix", os.Getenv("HOME")+"/test-repos/"+user)
+	server.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	userServer := &UserServer{
+		port:   strconv.Itoa(port),
+		server: server,
+		name:   user,
+	}
+
+	*userServers = append(*userServers, userServer)
+
+	if err := server.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Waiting for %v's server to start on port %v\n", user, userServer.port)
+	sleepTime, _ := time.ParseDuration("5s")
+	time.Sleep(sleepTime)
 }
 
 // Kill terminates all the user servers

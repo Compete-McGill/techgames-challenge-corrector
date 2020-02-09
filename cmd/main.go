@@ -10,10 +10,8 @@ func main() {
 	repos := []string{"https://github.com/rwieruch/node-express-server.git", "https://github.com/MohamedBeydoun/node-express-server.git"}
 
 	users := corrector.Setup(repos)
-	userServers, err := corrector.Run(users)
-	if err != nil {
-		log.Fatal(err)
-	}
+	userServers := corrector.Run(users)
+
 	if err := corrector.Grade(userServers); err != nil {
 		log.Fatal(err)
 	}
