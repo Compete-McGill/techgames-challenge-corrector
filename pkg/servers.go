@@ -40,7 +40,7 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 
 	port, err := getFreePort()
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 	*userServers = append(*userServers, userServer)
 
 	if err := server.Start(); err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("Error: %v\n", err)
 		return
 	}
 
@@ -71,12 +71,12 @@ func Kill(users []*UserServer) {
 	for _, user := range users {
 		pgid, err := syscall.Getpgid(user.server.Process.Pid)
 		if err != nil {
-			log.Printf("Error: %v", err)
+			log.Printf("Error: %v\n", err)
 			return
 		}
 
 		if err := syscall.Kill(-pgid, 9); err != nil {
-			log.Printf("Error: %v", err)
+			log.Printf("Error: %v\n", err)
 			return
 		}
 	}

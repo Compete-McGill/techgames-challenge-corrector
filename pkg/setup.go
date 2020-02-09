@@ -26,13 +26,13 @@ func setupHelper(repo string, users *[]string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	user := strings.Split(repo, "/")[3]
-	*users = append(*users, user)
 
 	// TODO: Add error handling
 	log.Printf("Cloning %v\n", repo)
 	exec.Command("git", "clone", repo, os.Getenv("HOME")+"/test-repos/"+user).Run()
 	log.Printf("Installing dependencies for %v's server\n", user)
 	exec.Command("npm", "install", "--prefix", os.Getenv("HOME")+"/test-repos/"+user).Run()
+	*users = append(*users, user)
 }
 
 // Clean removes the user repositories
