@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var lock sync.Mutex
+
 // UserServer contains information regarding the running server of a user
 type UserServer struct {
 	server *exec.Cmd
@@ -78,9 +80,8 @@ func Kill(users []*UserServer) {
 }
 
 func getFreePort() (int, error) {
-	mutex := sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
 	if err != nil {
