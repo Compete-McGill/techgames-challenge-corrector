@@ -18,8 +18,34 @@ type CreateAccountIncompleteRequest struct {
 	FullName string `json:"fullName"`
 }
 
+type CreateAccountResponse struct {
+	UserId   string `json:"userId"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	FullName string `json:"fullName"`
+}
+
 // AuthenticateRequest is the format of the authentication request body
 type AuthenticateRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type CreateArticleCompleteRequest struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	Body     string `json:"body"`
+	UserId   string `json:"userId"`
+}
+
+type CreateArticleIncompleteRequest struct {
+	Body   string `json:"body"`
+	UserId string `json:"userId"`
+}
+
+type CreateArticleResponse struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	Body     string `json:"body"`
+	UserId   string `json:"userId"`
 }

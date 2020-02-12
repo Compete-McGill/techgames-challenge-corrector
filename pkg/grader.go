@@ -13,6 +13,22 @@ import (
 	"github.com/Compete-McGill/techgames-challenge-corrector/pkg/models"
 )
 
+var userInfo *models.CreateAccountCompleteRequest = &models.CreateAccountCompleteRequest{
+	Email:    "example@email.com",
+	Password: "password",
+	FullName: "full name",
+}
+
+var articleInfo *models.CreateArticleCompleteRequest = &models.CreateArticleCompleteRequest{
+	Title:    "test article",
+	Subtitle: "test subtitle",
+	Body:     "test body",
+	UserId:   testUser.UserId,
+}
+
+var testUser models.CreateAccountResponse
+var testArticle models.CreateArticleResponse
+
 // Grade grades the user's server based on a series of tests
 func Grade(userServers []*UserServer) {
 	var wg sync.WaitGroup
@@ -34,22 +50,15 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	scores["createAccount201"] = createAccount201Test(userServer)
 	scores["createAccount400"] = createAccount400Test(userServer)
 	scores["createAccount500"] = createAccount500Test(userServer)
-	scores["authenticate200"] = authenticate200Test(userServer)
-	scores["authenticate403"] = authenticate403Test(userServer)
 	scores["indexArticlesTest"] = indexArticlesTest(userServer)
 	scores["showArticles200Test"] = showArticles200Test(userServer)
 	scores["showArticles404Test"] = showArticles404Test(userServer)
 	scores["createArticles201Test"] = createArticles200Test(userServer)
 	scores["createArticles400Test"] = createArticles400Test(userServer)
-	scores["createArticles403Test"] = createArticles403Test(userServer)
 	scores["updateArticles200Test"] = updateArticles200Test(userServer)
 	scores["updateArticles400Test"] = updateArticles400Test(userServer)
-	scores["updateArticles401Test"] = updateArticles401Test(userServer)
-	scores["updateArticles403Test"] = updateArticles403Test(userServer)
 	scores["updateArticles404Test"] = updateArticles404Test(userServer)
 	scores["deleteArticles200Test"] = deleteArticles200Test(userServer)
-	scores["deleteArticles401Test"] = deleteArticles401Test(userServer)
-	scores["deleteArticles403Test"] = deleteArticles403Test(userServer)
 	scores["deleteArticles404Test"] = deleteArticles404Test(userServer)
 
 	for test, score := range scores {
@@ -94,18 +103,26 @@ func livenessTest(userServer *UserServer) bool {
 func createAccount201Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 201")
 
-	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
-		Email:    "example@email.com",
-		Password: "password",
-		FullName: "full name",
-	})
+	userJson, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
+
+	err = json.Unmarshal(body, &testUser)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
 
 	return resp.Status == "201"
 }
@@ -113,12 +130,12 @@ func createAccount201Test(userServer *UserServer) bool {
 func createAccount400Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 400")
 
-	userInfo, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
+	userJson, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
 		Password: "password",
 		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -131,13 +148,9 @@ func createAccount400Test(userServer *UserServer) bool {
 func createAccount500Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 500")
 
-	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
-		Email:    "example@email.com",
-		Password: "new password",
-		FullName: "new full name",
-	})
+	userJson, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userInfo))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -147,41 +160,49 @@ func createAccount500Test(userServer *UserServer) bool {
 	return resp.Status == "500"
 }
 
-func authenticate200Test(userServer *UserServer) bool {
-	// TODO: Add token validation with predetermined secret
-	log.Println("Testing POST /api/auth/authenticate 200")
+func createArticles200Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/articles 200")
 
-	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
-		Email:    "example@email.com",
-		Password: "password",
-	})
+	articleJson, _ := json.Marshal(articleInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/authenticate", "application/json", bytes.NewBuffer(userInfo))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJson))
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
+
+	err = json.Unmarshal(body, &testArticle)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
 
 	return resp.Status == "200"
 }
 
-func authenticate403Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/auth/authenticate 403")
+func createArticles400Test(userServer *UserServer) bool {
+	log.Println("Testing POST /api/articles 400")
 
-	userInfo, _ := json.Marshal(&models.CreateAccountCompleteRequest{
-		Email:    "example@email.com",
-		Password: "not password",
+	articleJson, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
+		Password: "password",
+		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/authenticate", "application/json", bytes.NewBuffer(userInfo))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJson))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
 
-	return resp.Status == "403"
+	return resp.Status == "400"
 }
 
 func indexArticlesTest(userServer *UserServer) bool {
@@ -199,21 +220,6 @@ func showArticles404Test(userServer *UserServer) bool {
 	return false
 }
 
-func createArticles200Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/articles 200")
-	return false
-}
-
-func createArticles400Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/articles 400")
-	return false
-}
-
-func createArticles403Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/articles 403")
-	return false
-}
-
 func updateArticles200Test(userServer *UserServer) bool {
 	log.Println("Testing PUT /api/articles/{atricleId} 200")
 	return false
@@ -224,16 +230,6 @@ func updateArticles400Test(userServer *UserServer) bool {
 	return false
 }
 
-func updateArticles401Test(userServer *UserServer) bool {
-	log.Println("Testing PUT /api/articles/{atricleId} 401")
-	return false
-}
-
-func updateArticles403Test(userServer *UserServer) bool {
-	log.Println("Testing PUT /api/articles/{atricleId} 403")
-	return false
-}
-
 func updateArticles404Test(userServer *UserServer) bool {
 	log.Println("Testing PUT /api/articles/{atricleId} 404")
 	return false
@@ -241,16 +237,6 @@ func updateArticles404Test(userServer *UserServer) bool {
 
 func deleteArticles200Test(userServer *UserServer) bool {
 	log.Println("Testing DELETE /api/articles/{atricleId} 200")
-	return false
-}
-
-func deleteArticles401Test(userServer *UserServer) bool {
-	log.Println("Testing DELETE /api/articles/{atricleId} 401")
-	return false
-}
-
-func deleteArticles403Test(userServer *UserServer) bool {
-	log.Println("Testing DELETE /api/articles/{atricleId} 403")
 	return false
 }
 
