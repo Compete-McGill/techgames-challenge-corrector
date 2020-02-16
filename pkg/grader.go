@@ -13,17 +13,17 @@ import (
 	"github.com/Compete-McGill/techgames-challenge-corrector/pkg/models"
 )
 
-var userInfo *models.CreateAccountCompleteRequest = &models.CreateAccountCompleteRequest{
+var userInfo *models.CreateAccountRequest = &models.CreateAccountRequest{
 	Email:    "example@email.com",
 	Password: "password",
 	FullName: "full name",
 }
 
-var articleInfo *models.CreateArticleCompleteRequest = &models.CreateArticleCompleteRequest{
+var articleInfo *models.CreateArticleRequest = &models.CreateArticleRequest{
 	Title:    "test article",
 	Subtitle: "test subtitle",
 	Body:     "test body",
-	UserId:   testUser.UserId,
+	UserID:   testUser.ID,
 }
 
 var testUser models.CreateAccountResponse
@@ -103,9 +103,10 @@ func livenessTest(userServer *UserServer) bool {
 func createAccount201Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 201")
 
-	userJson, _ := json.Marshal(userInfo)
+	userInfo.Email = userServer.name + "@email.com"
+	userJSON, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -130,12 +131,12 @@ func createAccount201Test(userServer *UserServer) bool {
 func createAccount400Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 400")
 
-	userJson, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
+	userJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
 		Password: "password",
 		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -148,9 +149,9 @@ func createAccount400Test(userServer *UserServer) bool {
 func createAccount500Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/auth/createAccount 500")
 
-	userJson, _ := json.Marshal(userInfo)
+	userJSON, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJson))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -163,9 +164,9 @@ func createAccount500Test(userServer *UserServer) bool {
 func createArticles200Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/articles 200")
 
-	articleJson, _ := json.Marshal(articleInfo)
+	articleJSON, _ := json.Marshal(articleInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJson))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -190,12 +191,12 @@ func createArticles200Test(userServer *UserServer) bool {
 func createArticles400Test(userServer *UserServer) bool {
 	log.Println("Testing POST /api/articles 400")
 
-	articleJson, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
+	articleJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
 		Password: "password",
 		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJson))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -207,7 +208,35 @@ func createArticles400Test(userServer *UserServer) bool {
 
 func indexArticlesTest(userServer *UserServer) bool {
 	log.Println("Testing GET /api/articles 200")
-	return false
+
+	resp, err := http.Get("http://localhost:" + userServer.port + "/api/articles")
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	var articles models.GetArticlesResponse
+	err = json.Unmarshal(body, &articles)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	result := false
+	for _, article := range articles {
+		if article.UserID == testUser.ID && article.Title == testArticle.Title {
+			result = true
+		}
+	}
+
+	return result
 }
 
 func showArticles200Test(userServer *UserServer) bool {
