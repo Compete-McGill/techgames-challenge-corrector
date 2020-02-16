@@ -185,9 +185,9 @@ func createArticles200Test(userServer *UserServer) bool {
 }
 
 func createArticles400Test(userServer *UserServer) bool {
-	articleJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
-		Password: "password",
-		FullName: "full name",
+	articleJSON, _ := json.Marshal(&models.CreateArticleIncompleteRequest{
+		Body:   "test body",
+		UserID: testUser.ID,
 	})
 
 	resp, err := http.Post("http://localhost:"+userServer.port+"/articles", "application/json", bytes.NewBuffer(articleJSON))
@@ -256,7 +256,21 @@ func showArticles200Test(userServer *UserServer) bool {
 }
 
 func showArticles404Test(userServer *UserServer) bool {
-	return false
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodGet, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	result := false
+	if resp.StatusCode == 404 {
+		result = true
+	}
+
+	return result
 }
 
 func updateArticles200Test(userServer *UserServer) bool {
@@ -298,7 +312,21 @@ func updateArticles400Test(userServer *UserServer) bool {
 }
 
 func updateArticles404Test(userServer *UserServer) bool {
-	return false
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPut, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	result := false
+	if resp.StatusCode == 404 {
+		result = true
+	}
+
+	return result
 }
 
 func deleteArticles200Test(userServer *UserServer) bool {
@@ -328,5 +356,26 @@ func deleteArticles200Test(userServer *UserServer) bool {
 }
 
 func deleteArticles404Test(userServer *UserServer) bool {
-	return false
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodDelete, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	log.Printf("%v\n", string(body))
+
+	result := false
+	if resp.StatusCode == 404 {
+		result = true
+	}
+
+	return result
 }
