@@ -74,8 +74,7 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 }
 
 func livenessTest(userServer *UserServer) bool {
-	log.Println("Testing GET /api/status")
-	resp, err := http.Get("http://localhost:" + userServer.port + "/api/status")
+	resp, err := http.Get("http://localhost:" + userServer.port + "/status")
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -101,12 +100,10 @@ func livenessTest(userServer *UserServer) bool {
 }
 
 func createAccount201Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/auth/createAccount 201")
-
 	userInfo.Email = userServer.name + "@email.com"
 	userJSON, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -125,48 +122,42 @@ func createAccount201Test(userServer *UserServer) bool {
 		return false
 	}
 
-	return resp.Status == "201"
+	return resp.StatusCode == 201
 }
 
 func createAccount400Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/auth/createAccount 400")
-
 	userJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
 		Password: "password",
 		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
 
-	return resp.Status == "400"
+	return resp.StatusCode == 400
 }
 
 func createAccount500Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/auth/createAccount 500")
-
 	userJSON, _ := json.Marshal(userInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
 
-	return resp.Status == "500"
+	return resp.StatusCode == 500
 }
 
 func createArticles200Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/articles 200")
-
 	articleJSON, _ := json.Marshal(articleInfo)
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJSON))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/articles", "application/json", bytes.NewBuffer(articleJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -185,31 +176,27 @@ func createArticles200Test(userServer *UserServer) bool {
 		return false
 	}
 
-	return resp.Status == "200"
+	return resp.StatusCode == 200
 }
 
 func createArticles400Test(userServer *UserServer) bool {
-	log.Println("Testing POST /api/articles 400")
-
 	articleJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
 		Password: "password",
 		FullName: "full name",
 	})
 
-	resp, err := http.Post("http://localhost:"+userServer.port+"/api/articles", "application/json", bytes.NewBuffer(articleJSON))
+	resp, err := http.Post("http://localhost:"+userServer.port+"/articles", "application/json", bytes.NewBuffer(articleJSON))
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
 
-	return resp.Status == "400"
+	return resp.StatusCode == 400
 }
 
 func indexArticlesTest(userServer *UserServer) bool {
-	log.Println("Testing GET /api/articles 200")
-
-	resp, err := http.Get("http://localhost:" + userServer.port + "/api/articles")
+	resp, err := http.Get("http://localhost:" + userServer.port + "/articles")
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
@@ -240,36 +227,29 @@ func indexArticlesTest(userServer *UserServer) bool {
 }
 
 func showArticles200Test(userServer *UserServer) bool {
-	log.Println("Testing GET /api/articles/{articleId} 200")
 	return false
 }
 
 func showArticles404Test(userServer *UserServer) bool {
-	log.Println("Testing GET /api/articles/{articleId} 404")
 	return false
 }
 
 func updateArticles200Test(userServer *UserServer) bool {
-	log.Println("Testing PUT /api/articles/{atricleId} 200")
 	return false
 }
 
 func updateArticles400Test(userServer *UserServer) bool {
-	log.Println("Testing PUT /api/articles/{atricleId} 400")
 	return false
 }
 
 func updateArticles404Test(userServer *UserServer) bool {
-	log.Println("Testing PUT /api/articles/{atricleId} 404")
 	return false
 }
 
 func deleteArticles200Test(userServer *UserServer) bool {
-	log.Println("Testing DELETE /api/articles/{atricleId} 200")
 	return false
 }
 
 func deleteArticles404Test(userServer *UserServer) bool {
-	log.Println("Testing DELETE /api/articles/{atricleId} 404")
 	return false
 }

@@ -1,0 +1,14 @@
+version: "3"
+services:
+  api:
+    image: techgames-challenge-corrector
+    container_name: corrector
+    links:
+      - mongo
+  mongo:
+    container_name: mongo
+    image: mongo
+    logging:
+      driver: none
+    ports:
+      - 27017:27017

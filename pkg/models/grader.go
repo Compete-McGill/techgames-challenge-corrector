@@ -1,6 +1,6 @@
 package models
 
-// LivenessResponse is the format of a response from /api/status
+// LivenessResponse is the format of a response from /status
 type LivenessResponse struct {
 	Status string `json:"status"`
 }
