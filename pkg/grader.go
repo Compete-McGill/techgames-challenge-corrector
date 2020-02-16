@@ -13,21 +13,12 @@ import (
 	"github.com/Compete-McGill/techgames-challenge-corrector/pkg/models"
 )
 
-var userInfo *models.CreateAccountRequest = &models.CreateAccountRequest{
-	Email:    "example@email.com",
-	Password: "password",
-	FullName: "full name",
-}
-
 var articleInfo *models.CreateArticleRequest = &models.CreateArticleRequest{
 	Title:    "test article",
 	Subtitle: "test subtitle",
 	Body:     "test body",
-	UserID:   testUser.ID,
+	Author:   "test author",
 }
-
-var testUser models.CreateAccountResponse
-var testArticle models.CreateArticleResponse
 
 // Grade grades the user's server based on a series of tests
 func Grade(userServers []*UserServer) {
@@ -44,36 +35,32 @@ func Grade(userServers []*UserServer) {
 func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	var testArticle models.CreateArticleResponse
 	scores := make(map[string]bool)
 
-	scores["liveness"] = livenessTest(userServer)
-	scores["createAccount201"] = createAccount201Test(userServer)
-	scores["createAccount400"] = createAccount400Test(userServer)
-	scores["createAccount500"] = createAccount500Test(userServer)
-	scores["createArticles200Test"] = createArticles200Test(userServer)
-	scores["createArticles400Test"] = createArticles400Test(userServer)
-	scores["indexArticlesTest"] = indexArticlesTest(userServer)
-	scores["showArticles200Test"] = showArticles200Test(userServer)
-	scores["showArticles404Test"] = showArticles404Test(userServer)
-	scores["updateArticles200Test"] = updateArticles200Test(userServer)
-	scores["updateArticles400Test"] = updateArticles400Test(userServer)
-	scores["updateArticles404Test"] = updateArticles404Test(userServer)
-	scores["deleteArticles200Test"] = deleteArticles200Test(userServer)
-	scores["deleteArticles404Test"] = deleteArticles404Test(userServer)
+	scores["liveness"] = livenessTest(userServer, &testArticle)
+	scores["createArticles200Test"] = createArticles200Test(userServer, &testArticle)
+	scores["createArticles400Test"] = createArticles400Test(userServer, &testArticle)
+	scores["indexArticlesTest"] = indexArticlesTest(userServer, &testArticle)
+	scores["showArticles200Test"] = showArticles200Test(userServer, &testArticle)
+	scores["showArticles404Test"] = showArticles404Test(userServer, &testArticle)
+	scores["updateArticles200Test"] = updateArticles200Test(userServer, &testArticle)
+	scores["updateArticles400Test"] = updateArticles400Test(userServer, &testArticle)
+	scores["updateArticles404Test"] = updateArticles404Test(userServer, &testArticle)
+	scores["deleteArticles200Test"] = deleteArticles200Test(userServer, &testArticle)
+	scores["deleteArticles404Test"] = deleteArticles404Test(userServer, &testArticle)
 
-	for test, score := range scores {
-		status := ""
+	total := 0
+	for _, score := range scores {
 		if score {
-			status = "passed"
-		} else {
-			status = "failed"
+			total++
 		}
-
-		log.Printf("%s %s the %s test", userServer.name, status, test)
 	}
+	log.Printf("%v's score: %v/11", userServer.name, total)
+	// Make request to update user score
 }
 
-func livenessTest(userServer *UserServer) bool {
+func livenessTest(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	resp, err := http.Get("http://localhost:" + userServer.port + "/status")
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -99,62 +86,7 @@ func livenessTest(userServer *UserServer) bool {
 	return score
 }
 
-func createAccount201Test(userServer *UserServer) bool {
-	userInfo.Email = userServer.name + "@email.com"
-	userJSON, _ := json.Marshal(userInfo)
-
-	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-	resp.Body.Close()
-
-	err = json.Unmarshal(body, &testUser)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-
-	return resp.StatusCode == 201
-}
-
-func createAccount400Test(userServer *UserServer) bool {
-	userJSON, _ := json.Marshal(&models.CreateAccountIncompleteRequest{
-		Password: "password",
-		FullName: "full name",
-	})
-
-	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-	resp.Body.Close()
-
-	return resp.StatusCode == 400
-}
-
-func createAccount500Test(userServer *UserServer) bool {
-	userJSON, _ := json.Marshal(userInfo)
-
-	resp, err := http.Post("http://localhost:"+userServer.port+"/auth/createAccount", "application/json", bytes.NewBuffer(userJSON))
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-	resp.Body.Close()
-
-	return resp.StatusCode == 500
-}
-
-func createArticles200Test(userServer *UserServer) bool {
+func createArticles200Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	articleJSON, _ := json.Marshal(articleInfo)
 
 	resp, err := http.Post("http://localhost:"+userServer.port+"/articles", "application/json", bytes.NewBuffer(articleJSON))
@@ -177,17 +109,17 @@ func createArticles200Test(userServer *UserServer) bool {
 	}
 
 	result := false
-	if resp.StatusCode == 200 && testArticle.ID != "" && testArticle.UserID == testUser.ID && testArticle.Title == articleInfo.Title {
+	if resp.StatusCode == 200 && testArticle.ID != "" && testArticle.Author == "test author" && testArticle.Title == articleInfo.Title {
 		result = true
 	}
 
 	return result
 }
 
-func createArticles400Test(userServer *UserServer) bool {
+func createArticles400Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	articleJSON, _ := json.Marshal(&models.CreateArticleIncompleteRequest{
 		Body:   "test body",
-		UserID: testUser.ID,
+		Author: "test author",
 	})
 
 	resp, err := http.Post("http://localhost:"+userServer.port+"/articles", "application/json", bytes.NewBuffer(articleJSON))
@@ -200,7 +132,7 @@ func createArticles400Test(userServer *UserServer) bool {
 	return resp.StatusCode == 400
 }
 
-func indexArticlesTest(userServer *UserServer) bool {
+func indexArticlesTest(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	resp, err := http.Get("http://localhost:" + userServer.port + "/articles")
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -223,7 +155,7 @@ func indexArticlesTest(userServer *UserServer) bool {
 
 	result := false
 	for _, article := range articles {
-		if article.UserID == testUser.ID && article.Title == testArticle.Title {
+		if article.Author == "test author" && article.Title == testArticle.Title {
 			result = true
 		}
 	}
@@ -231,7 +163,7 @@ func indexArticlesTest(userServer *UserServer) bool {
 	return result
 }
 
-func showArticles200Test(userServer *UserServer) bool {
+func showArticles200Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	resp, err := http.Get("http://localhost:" + userServer.port + "/articles/" + testArticle.ID)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -255,7 +187,7 @@ func showArticles200Test(userServer *UserServer) bool {
 	return article.ID == testArticle.ID
 }
 
-func showArticles404Test(userServer *UserServer) bool {
+func showArticles404Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
 	resp, err := client.Do(req)
@@ -273,7 +205,7 @@ func showArticles404Test(userServer *UserServer) bool {
 	return result
 }
 
-func updateArticles200Test(userServer *UserServer) bool {
+func updateArticles200Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	updateArticleInfo := models.UpdateArticleRequest{Title: "new test title"}
 	updateArticleJSON, _ := json.Marshal(&updateArticleInfo)
 
@@ -307,11 +239,25 @@ func updateArticles200Test(userServer *UserServer) bool {
 	return result
 }
 
-func updateArticles400Test(userServer *UserServer) bool {
-	return false
+func updateArticles400Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPut, "http://localhost:"+userServer.port+"/articles/hakjshdakjhdskj", nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	result := false
+	if resp.StatusCode == 400 {
+		result = true
+	}
+
+	return result
 }
 
-func updateArticles404Test(userServer *UserServer) bool {
+func updateArticles404Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodPut, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
 	resp, err := client.Do(req)
@@ -329,7 +275,7 @@ func updateArticles404Test(userServer *UserServer) bool {
 	return result
 }
 
-func deleteArticles200Test(userServer *UserServer) bool {
+func deleteArticles200Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodDelete, "http://localhost:"+userServer.port+"/articles/"+testArticle.ID, nil)
 	deleteResp, err := client.Do(req)
@@ -355,7 +301,7 @@ func deleteArticles200Test(userServer *UserServer) bool {
 	return result
 }
 
-func deleteArticles404Test(userServer *UserServer) bool {
+func deleteArticles404Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodDelete, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
 	resp, err := client.Do(req)
@@ -363,14 +309,12 @@ func deleteArticles404Test(userServer *UserServer) bool {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		return false
 	}
 	resp.Body.Close()
-
-	log.Printf("%v\n", string(body))
 
 	result := false
 	if resp.StatusCode == 404 {

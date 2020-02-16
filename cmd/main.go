@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	repos := []string{"https://github.com/Compete-McGill/techgames-sample-api.git"}
+	repos := []string{"https://github.com/Compete-McGill/techgames-sample-api.git", "https://github.com/Compete-McGill/techgames-sample-api.git", "https://github.com/Compete-McGill/techgames-sample-api.git", "https://github.com/Compete-McGill/techgames-sample-api.git", "https://github.com/Compete-McGill/techgames-sample-api.git"}
 
 	users := corrector.Setup(repos)
 	userServers := corrector.Run(users)
