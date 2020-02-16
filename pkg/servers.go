@@ -55,6 +55,9 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 		name:   user,
 	}
 
+	// server.Stdout = os.Stdout
+	// server.Stderr = os.Stderr
+
 	*userServers = append(*userServers, userServer)
 
 	if err := server.Start(); err != nil {

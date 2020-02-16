@@ -48,6 +48,7 @@ type CreateArticleIncompleteRequest struct {
 
 // CreateArticleResponse is the reponse format when fetching an article
 type CreateArticleResponse struct {
+	ID       string `json:"_id"`
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
 	Body     string `json:"body"`
@@ -56,3 +57,8 @@ type CreateArticleResponse struct {
 
 // GetArticlesResponse is the reponse format when fetching all articles
 type GetArticlesResponse []CreateArticleResponse
+
+// UpdateArticleRequest is the request format for updating an article
+type UpdateArticleRequest struct {
+	Title string `json:"title"`
+}

@@ -176,7 +176,12 @@ func createArticles200Test(userServer *UserServer) bool {
 		return false
 	}
 
-	return resp.StatusCode == 200
+	result := false
+	if resp.StatusCode == 200 && testArticle.ID != "" && testArticle.UserID == testUser.ID && testArticle.Title == articleInfo.Title {
+		result = true
+	}
+
+	return result
 }
 
 func createArticles400Test(userServer *UserServer) bool {
@@ -227,7 +232,27 @@ func indexArticlesTest(userServer *UserServer) bool {
 }
 
 func showArticles200Test(userServer *UserServer) bool {
-	return false
+	resp, err := http.Get("http://localhost:" + userServer.port + "/articles/" + testArticle.ID)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	var article models.CreateArticleResponse
+	err = json.Unmarshal(body, &article)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	return article.ID == testArticle.ID
 }
 
 func showArticles404Test(userServer *UserServer) bool {
@@ -235,7 +260,37 @@ func showArticles404Test(userServer *UserServer) bool {
 }
 
 func updateArticles200Test(userServer *UserServer) bool {
-	return false
+	updateArticleInfo := models.UpdateArticleRequest{Title: "new test title"}
+	updateArticleJSON, _ := json.Marshal(&updateArticleInfo)
+
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPut, "http://localhost:"+userServer.port+"/articles/"+testArticle.ID, bytes.NewBuffer(updateArticleJSON))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	err = json.Unmarshal(body, &testArticle)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+
+	result := false
+	if resp.StatusCode == 200 && testArticle.Title == updateArticleInfo.Title {
+		result = true
+	}
+
+	return result
 }
 
 func updateArticles400Test(userServer *UserServer) bool {
@@ -247,7 +302,29 @@ func updateArticles404Test(userServer *UserServer) bool {
 }
 
 func deleteArticles200Test(userServer *UserServer) bool {
-	return false
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodDelete, "http://localhost:"+userServer.port+"/articles/"+testArticle.ID, nil)
+	deleteResp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	deleteResp.Body.Close()
+
+	req, _ = http.NewRequest(http.MethodGet, "http://localhost:"+userServer.port+"/articles/"+testArticle.ID, nil)
+	getResp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	getResp.Body.Close()
+
+	result := false
+	if getResp.StatusCode == 404 && deleteResp.StatusCode == 200 {
+		result = true
+	}
+
+	return result
 }
 
 func deleteArticles404Test(userServer *UserServer) bool {
