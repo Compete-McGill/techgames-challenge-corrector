@@ -43,11 +43,13 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	scores["createArticles400Test"] = createArticles400Test(userServer, &testArticle)
 	scores["indexArticlesTest"] = indexArticlesTest(userServer, &testArticle)
 	scores["showArticles200Test"] = showArticles200Test(userServer, &testArticle)
+	scores["showArticles400Test"] = showArticles400Test(userServer, &testArticle)
 	scores["showArticles404Test"] = showArticles404Test(userServer, &testArticle)
 	scores["updateArticles200Test"] = updateArticles200Test(userServer, &testArticle)
 	scores["updateArticles400Test"] = updateArticles400Test(userServer, &testArticle)
 	scores["updateArticles404Test"] = updateArticles404Test(userServer, &testArticle)
 	scores["deleteArticles200Test"] = deleteArticles200Test(userServer, &testArticle)
+	scores["deleteArticles400Test"] = deleteArticles400Test(userServer, &testArticle)
 	scores["deleteArticles404Test"] = deleteArticles404Test(userServer, &testArticle)
 
 	total := 0
@@ -56,7 +58,7 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 			total++
 		}
 	}
-	log.Printf("%v's score: %v/11", userServer.name, total)
+	log.Printf("%v's score: %v/13", userServer.name, total)
 	// Make request to update user score
 }
 
@@ -187,6 +189,17 @@ func showArticles200Test(userServer *UserServer, testArticle *models.CreateArtic
 	return article.ID == testArticle.ID
 }
 
+func showArticles400Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
+	resp, err := http.Get("http://localhost:" + userServer.port + "/articles/akshdkajhsd")
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.StatusCode == 400
+}
+
 func showArticles404Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:"+userServer.port+"/articles/507f1f77bcf86cd799439011", nil)
@@ -299,6 +312,19 @@ func deleteArticles200Test(userServer *UserServer, testArticle *models.CreateArt
 	}
 
 	return result
+}
+
+func deleteArticles400Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodDelete, "http://localhost:"+userServer.port+"/articles/akljshdakjshd", nil)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.StatusCode == 400
 }
 
 func deleteArticles404Test(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
