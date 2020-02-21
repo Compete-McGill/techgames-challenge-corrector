@@ -8,8 +8,12 @@ import (
 	"sync"
 )
 
+var hostURL string
+
 // Setup clones repos and installs their dependencies
-func Setup(repos []string) []string {
+func Setup(repos []string, apiURL string) []string {
+	hostURL = strings.Trim(apiURL, "/")
+
 	users := make([]string, 0, len(repos))
 	var wg sync.WaitGroup
 	for _, repo := range repos {

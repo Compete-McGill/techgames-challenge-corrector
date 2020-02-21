@@ -36,30 +36,36 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var testArticle models.CreateArticleResponse
-	scores := make(map[string]bool)
+	scores := Score{}
 
-	scores["liveness"] = livenessTest(userServer, &testArticle)
-	scores["createArticles200Test"] = createArticles200Test(userServer, &testArticle)
-	scores["createArticles400Test"] = createArticles400Test(userServer, &testArticle)
-	scores["indexArticlesTest"] = indexArticlesTest(userServer, &testArticle)
-	scores["showArticles200Test"] = showArticles200Test(userServer, &testArticle)
-	scores["showArticles400Test"] = showArticles400Test(userServer, &testArticle)
-	scores["showArticles404Test"] = showArticles404Test(userServer, &testArticle)
-	scores["updateArticles200Test"] = updateArticles200Test(userServer, &testArticle)
-	scores["updateArticles400Test"] = updateArticles400Test(userServer, &testArticle)
-	scores["updateArticles404Test"] = updateArticles404Test(userServer, &testArticle)
-	scores["deleteArticles200Test"] = deleteArticles200Test(userServer, &testArticle)
-	scores["deleteArticles400Test"] = deleteArticles400Test(userServer, &testArticle)
-	scores["deleteArticles404Test"] = deleteArticles404Test(userServer, &testArticle)
+	scores.Liveness = livenessTest(userServer, &testArticle)
+	scores.CreateArticles200 = createArticles200Test(userServer, &testArticle)
+	scores.CreateArticles400 = createArticles400Test(userServer, &testArticle)
+	scores.IndexArticles = indexArticlesTest(userServer, &testArticle)
+	scores.ShowArticles200 = showArticles200Test(userServer, &testArticle)
+	scores.ShowArticles400 = showArticles400Test(userServer, &testArticle)
+	scores.ShowArticles404 = showArticles404Test(userServer, &testArticle)
+	scores.UpdateArticles200 = updateArticles200Test(userServer, &testArticle)
+	scores.UpdateArticles400 = updateArticles400Test(userServer, &testArticle)
+	scores.UpdateArticles404 = updateArticles404Test(userServer, &testArticle)
+	scores.DeleteArticles200 = deleteArticles200Test(userServer, &testArticle)
+	scores.DeleteArticles400 = deleteArticles400Test(userServer, &testArticle)
+	scores.DeleteArticles404 = deleteArticles404Test(userServer, &testArticle)
+
+	var scoresMap map[string]bool
+	inrec, _ := json.Marshal(scores)
+	json.Unmarshal(inrec, &scoresMap)
 
 	total := 0
-	for _, score := range scores {
+	for _, score := range scoresMap {
 		if score {
 			total++
 		}
 	}
 	log.Printf("%v's score: %v/13", userServer.name, total)
-	// Make request to update user score
+
+	UpdateScore(scores, userServer)
+	log.Printf("Score sent to server successfully")
 }
 
 func livenessTest(userServer *UserServer, testArticle *models.CreateArticleResponse) bool {
