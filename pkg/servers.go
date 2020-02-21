@@ -44,9 +44,13 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 		return
 	}
 
-	os.Setenv("PORT", strconv.Itoa(port))
 	server := exec.Command("npm", "start", "--prefix", os.Getenv("HOME")+"/test-repos/"+user)
+	server.Env = os.Environ()
+	server.Env = append(server.Env, "PORT="+strconv.Itoa(port))
+	server.Env = append(server.Env, "SERVER_PORT="+strconv.Itoa(port))
 	server.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// server.Stdout = os.Stdout
+	// server.Stderr = os.Stderr
 
 	userServer := &UserServer{
 		port:   strconv.Itoa(port),
@@ -62,7 +66,7 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 	}
 
 	log.Printf("Waiting for %v's server to start on port %v\n", user, userServer.port)
-	sleepTime, _ := time.ParseDuration("5s")
+	sleepTime, _ := time.ParseDuration("30s")
 	time.Sleep(sleepTime)
 }
 

@@ -31,7 +31,7 @@ func setupHelper(repo string, users *[]string, wg *sync.WaitGroup) {
 	log.Printf("Cloning %v\n", repo)
 	exec.Command("git", "clone", repo, os.Getenv("HOME")+"/test-repos/"+user).Run()
 	log.Printf("Installing dependencies for %v's server\n", user)
-	exec.Command("npm", "install", "--prefix", os.Getenv("HOME")+"/test-repos/"+user).Run()
+	exec.Command("npm", "install", os.Getenv("HOME")+"/test-repos/"+user, "--prefix", os.Getenv("HOME")+"/test-repos/"+user).Run()
 	*users = append(*users, user)
 }
 
