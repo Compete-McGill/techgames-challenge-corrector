@@ -64,7 +64,11 @@ func gradeHelper(userServer *UserServer, wg *sync.WaitGroup) {
 	}
 	log.Printf("%v's score: %v/13", userServer.name, total)
 
-	UpdateScore(scores, userServer)
+	err := UpdateScore(scores, userServer)
+	if err != nil {
+		log.Printf("Failure in sending score to the server")
+		return
+	}
 	log.Printf("Score sent to server successfully")
 }
 
