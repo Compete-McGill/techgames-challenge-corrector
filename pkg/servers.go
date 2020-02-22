@@ -66,7 +66,7 @@ func runHelper(user string, userServers *([]*UserServer), wg *sync.WaitGroup) {
 	}
 
 	log.Printf("Waiting for %v's server to start on port %v\n", user, userServer.port)
-	sleepTime, _ := time.ParseDuration("30s")
+	sleepTime, _ := time.ParseDuration("60s")
 	time.Sleep(sleepTime)
 }
 
