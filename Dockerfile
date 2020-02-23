@@ -9,4 +9,5 @@ FROM node:11.13.0-alpine
 
 RUN apk update && apk upgrade && apk add git
 COPY --from=builder /app/main /
+ENV API_URL http://localhost:3000
 CMD ["/main"]
